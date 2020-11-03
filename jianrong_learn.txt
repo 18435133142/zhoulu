@@ -1,0 +1,136 @@
+1.CSS兼容处理
+	（1）初始化默认样式，可使用第三方插件Normalize.css进行初始化，可避免因浏览器默认样式而导致的兼容性问题。
+	（2）使用浏览器的私有属性（添加前缀，IE:-ms-  opera:-o-  safari、chorme：-webkit-  火狐：-moz-）添加前缀属性在前，正式写法在后。
+	（3）使用hack,如条件hack <!-- if it IE9>代码块，可以是html，css，js<!endif -->if后面跟的条件共包含6种选择方式：是否、大于、大于或等于、小于、小于或等于、非指定版本
+		 是否：指定是否IE或IE某个版本。关键字：空
+		 大于：选择大于指定版本的IE版本。关键字：gt（greater than）
+		 大于或等于：选择大于或等于指定版本的IE版本。关键字：gte（greater than or equal）
+		 小于：选择小于指定版本的IE版本。关键字：lt（less than）
+		 小于或等于：选择小于或等于指定版本的IE版本。关键字：lte（less than or equal）
+		 非指定版本：选择除指定版本外的所有IE版本。关键字：!
+		 IE浏览器版本，如6、7、8，但IE10及以上版本已将条件注释特性移除，使用时需注意。
+		 属性hack：在CSS样式属性名前加上一些只有特定浏览器才能识别的hack前缀。如IE7: *color: #fff  IE6: _color: #fff
+		 选择符级hack：是针对一些页面表现不一致或者需要特殊对待的浏览器，在CSS选择器前加上一些只有某些特定浏览器才能识别的前缀进行hack。
+		 如*html *前缀只对IE6生效
+		 *+html *+前缀只对IE7生效
+		 @media screen\9{...}只对IE6/7生效
+		 @media \0screen {body { background: red; }}只对IE8有效
+	（4）使用自动化插件Autoprefixer它可以解析CSS文件并且添加浏览器前缀到CSS内容里。
+		 vue中使用autoprefixer:
+		 (1)npm install postcss autoprefixer -s
+		 (2)修改webpack.base.conf.js文件.vue  options: {
+			vueloaderconfig,
+			postcss: [require('autoprefixer')({browsers: ['last 10 chorme versions', 'last 5 firefox versions', 'safari >= 6', 'ie > 8']})]
+		 }
+		 (3)修改packags.json
+			"browsersList": {
+				 "> 1%",
+				 "last 2 versions",
+				 "not ie <= 8"
+				 ....
+			}
+2.html5兼容处理
+	（1）将语义元素定义为块元素：许多版本浏览器处理未知元素时当做内联元素来处理，可以申明header{display: block}来处理
+	（2）使用html5Shiv.js HTML5Shiv脚本必须放在<head>元素中，放在任何样式表之后
+		<!--[if lt IE 9]>
+          <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <![endif]-->
+3.js兼容处理
+	(1).获取滚动距离document.documentElement.scrollTop ()     document.body.scrollTop()   ==> 兼容IE      
+	(2).获取非行间样式getcomputedStyle()    参数1：当前对象      参数2：伪类选择器，通常不会使用，用false代替     currentStyle()   【语法】：对象.current[attr]
+	(3).事件中兼容性问题 var e = e || event；
+	(4).找到事件源  e.target  ||  e.srcElement      ==>   例如点击事件 ，则获取的是点击位置标签名(大写)
+	(5).获取按下的键盘码 e.keyCode  ||  e.which   
+	(6).阻止事件冒泡   e.stopPropagation()   ||    e.cancelBubble
+	(7).阻止浏览器默认行为(例如点击右键出来菜单栏) e.preventDefault()   ||    e.returnValue = false
+	(8).DOM2级监听事件兼容addEventListener       removeEventListener    attachEvent                 detachEvent            ===>  IE兼容
+	(9).创建ajax对象  var xhr = new XMLHttpRequest()     ||    new ActiveXObject("Microsoft,XMLHTTP")
+4、localStorage和sessionStorage的区别
+  1、localStorage和sessionStorage一样都是用来存储bai客户端临时信息的对象。
+  2、他们du均只能存储字符串类型的对象（虽然zhi规范中可以存储其他原生类型的对象，但是目前为止没有浏览器对其进行实现）。
+  3、localStorage生命周期是永久，这意味着除非用户显示在浏览器提供的UI上清除localStorage信息，否则这些信息将永远存在。
+  4、sessionStorage生命周期为当前窗口或标签页，一旦窗口或标签页被永久关闭了，那么所有通过sessionStorage存储的数据也就被清空了。
+  5、不同浏览器无法共享localStorage或sessionStorage中的信息。相同浏览器的不同页面间可以共享相同的 localStorage（页面属于相同域名和端口），
+  但是不同页面或标签页间无法共享sessionStorage的信息。这里需要注意的是，页面及标 签页仅指顶级窗口，如果一个标签页包含多个iframe标签且他们属于同源页面，
+  那么他们之间是可以共享sessionStorage的。
+  
+  
+  
+使用对象字面量和new创建的对象本质上是一样的，都继承object的原型prototype，使用Object.create(obj, prototype)创建的变量可指定所创建的对象的原型prototype,如果参数为null的话，Object.create则会创建空对象。
+特别需要指出的是Object.create(null)和new Object()的区别：两者都是创建空对象，但是new创建出的空对象会绑定Object的prototype原型对象，但是Object.create(null)的空对象是没有任何属性的。
+
+Vue项目优化步骤
+（1）修改webpack.prod.conf.js中的SourceMap为false,不生成.map映射文件。
+（2）按需加载：对于项目中，一些 通用 或者 不是特别差异 的组件可以使用按需加载，在需要的时候加载即可，并且会自动缓存。
+	 这时候需要在 router 文件夹下的 index.js 文件修改路由配置中的 组件引入 方式：component (resovle) {
+																					require(['@/components/HelloWorld'], resovle)
+																				 }
+（3）VueRouter的懒加载
+（4）将大的第三方包通过<script>标签引入：
+	一般将类似 `echarts` 这种比较大的第三方依赖包，通过 `<script></script>` 标签来引入的话，会很大程度缩小打包的大小。   
+	但是需要在 `vue` 配置文件这样配置：`webpack.base.config.js` 中添加 `不打包` 的包的名称，这样打包的时候才不会把这些包一起打包进去：  
+	module.exports = {
+	  entry:{...},
+	  output:{...},
+	  resolve:{...},
+	  module:{...},
+	  externals:{
+		"echarts":"echarts" //不打包的包名
+	  }
+	}
+（5）图片压缩
+（6）图片资源懒加载：
+	1.npm install vue-lazyload --save-dev
+	2.在入口文件 man.js 中引入并使用
+	  import VueLazyload from 'vue-lazyload'
+	  //然后再 vue 中直接使用
+	  Vue.use(VueLazyload)
+	  //或者添加自定义选项
+	  Vue.use(VueLazyload, {
+	    preLoad: 1.3,
+	    error: 'dist/error.png',
+	    loading: 'dist/loading.gif',
+	    attempt: 1
+	  })
+    3.<img v-lazy="/static/img/1.png">
+（7）
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

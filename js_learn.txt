@@ -1,0 +1,179 @@
+一.闭包
+	定义：在函数内部又定义了函数，并且内部函数引用了外部函数的参数或者局部变量，当内部函数作为返回值返回时，相关参数和变量都被保存到了返回的函数中，这就是闭包。
+	闭包就是携带状态的函数，并且它的状态可以完全对外隐藏起来。
+	可以在外部访问函数内部的变量和参数。返回闭包时牢记的一点就是：返回函数不要引用任何循环变量，或者后续会发生变化的变量。如果一定要引用循环变量怎么办？
+	方法是再创建一个函数，用该函数的参数绑定循环变量当前的值，无论该循环变量后续如何更改，已绑定到函数参数的值不变：
+	比如：
+		function count() {
+			var arr = [];
+			for (var i=1; i<=3; i++) {
+				arr.push((function (n) {
+					return function () {
+						return n * n;
+					}
+				})(i));
+			}
+			return arr;
+		}
+	函数作为返回值：高阶函数除了可以接受函数作为参数外，还可以把函数作为结果值返回。
+	 例一：Array求和，返回一个立即执行的函数。
+		function sum(arr) {
+			return arr.reduce(function (x, y) {
+				return x + y;
+			});
+		}
+		执行结果：sum([1, 2, 3, 4, 5]); // 15
+	 例二：不需要立即执行。
+		function lazy_sum(arr) {
+			var sum = function () {
+				return arr.reduce(function (x, y) {
+					return x + y;
+				});
+			}
+			return sum;
+		}
+		执行结果：当我们调用lazy_sum()时，返回的并不是求和结果，而是求和函数：
+			var f = lazy_sum([1, 2, 3, 4, 5]); // function sum()
+			f(); // 15
+二.箭头函数
+	定义：ES6标准新增了一种新的函数：Arrow Function（箭头函数）。为什么叫Arrow Function？因为它的定义用的就是一个箭头：
+	箭头函数看上去是匿名函数的一种简写，但实际上，箭头函数和匿名函数有个明显的区别：箭头函数内部的this是词法作用域，由上下文确定。
+	x => x * x 相当于：
+						function (x) {
+							return x * x;
+						}
+	箭头函数相当于匿名函数，并且简化了函数定义。箭头函数有两种格式，一种像上面的，只包含一个表达式，连{ ... }和return都省略掉了。
+	还有一种可以包含多条语句，这时候就不能省略{ ... }和return：
+	x => {
+		if (x > 0) {
+			return x * x;
+		}
+		else {
+			return - x * x;
+		}
+	}
+	
+	如果参数不是一个，就需要用括号()括起来：
+	// 两个参数:
+	(x, y) => x * x + y * y
+	如果要返回一个对象要这么写：
+	x => ({ foo: x })
+	由于this在箭头函数中已经按照词法作用域绑定了，所以，用call()或者apply()调用箭头函数时，无法对this进行绑定，即传入的第一个参数被忽略：
+	var obj = {
+		birth: 1990,
+		getAge: function (year) {
+			var b = this.birth; // 1990
+			var fn = (y) => y - this.birth; // this.birth仍是1990
+			return fn.call({birth:2000}, year);
+		}
+	};
+	obj.getAge(2015); // 25
+	
+三.generator函数
+	定义：generator（生成器）是ES6标准引入的新的数据类型。一个generator看上去像一个函数，但可以返回多次。
+	ES6定义generator标准的哥们借鉴了Python的generator的概念和语法
+	函数在执行过程中，如果没有遇到return语句（函数末尾如果没有return，就是隐含的return undefined;），控制权无法交回被调用的代码。
+	generator和函数不同的是，generator由function*定义（注意多出的*号），并且，除了return语句，还可以用yield返回多次。
+	直接调用一个generator和调用函数不一样，fib(5)仅仅是创建了一个generator对象，还没有去执行它。
+	调用generator对象有两个方法，一是不断地调用generator对象的next()方法：
+	next()方法会执行generator的代码，然后，每次遇到yield x;就返回一个对象{value: x, done: true/false}，然后“暂停”。返回的value就是yield的返回值，
+	done表示这个generator是否已经执行结束了。如果done为true，则value就是return的返回值。
+	当执行到done为true时，这个generator对象就已经全部执行完毕，不要再继续调用next()了。
+	function* fib(max) {
+		var
+			t,
+			a = 0,
+			b = 1,
+			n = 0;
+		while (n < max) {
+			yield a;
+			[a, b] = [b, a + b];
+			n ++;
+		}
+		return;
+	}
+	
+四：创建对象：
+	JavaScript对每个创建的对象都会设置一个原型，指向它的原型对象。
+	当我们用obj.xxx访问一个对象的属性时，JavaScript引擎先在当前对象上查找该属性，如果没有找到，就到其原型对象上找，如果还没有找到，
+	就一直上溯到Object.prototype对象，最后，如果还没有找到，就只能返回undefined。
+	很容易想到，如果原型链很长，那么访问一个对象的属性就会因为花更多的时间查找而变得更慢，因此要注意不要把原型链搞得太长。
+	
+	构造函数：
+	除了直接用{ ... }创建一个对象外，JavaScript还可以用一种构造函数的方法来创建对象。它的用法是，先定义一个构造函数：通多new创建对象，
+	创建的对象的原型就是该构造函数。它绑定的this指向新创建的对象。
+	function Student(name) {
+		this.name = name;
+		this.hello = function () {
+			alert('Hello, ' + this.name + '!');
+		}
+	}
+	用new Student()创建的对象还从原型上获得了一个constructor属性，它指向函数Student本身：
+	xiaoming.constructor === Student.prototype.constructor; // true
+	Student.prototype.constructor === Student; // true
+	Object.getPrototypeOf(xiaoming) === Student.prototype; // true
+	xiaoming instanceof Student; // true
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

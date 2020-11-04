@@ -53,9 +53,41 @@
 		message: ''
 	  },
 	如果你在 data 选项中未声明 message，Vue 将警告你渲染函数在试图访问的属性不存在。
+	这样的限制在背后是有其技术原因的，它消除了在依赖项跟踪系统中的一类边界情况，也使 Vue 实例在类型检查系统的帮助下运行的更高效。
+	而且在代码可维护性方面也有一点重要的考虑：data 对象就像组件状态的概要，提前声明所有的响应式属性，可以让组件代码在以后重新阅读或
+	其他开发人员阅读时更易于被理解。
 	
+	异步更新队列：Vue 异步执行 DOM 更新。只要观察到数据变化，Vue 将开启一个队列，并缓冲在同一事件循环中发生的所有数据改变。如果同一个 watcher 被多次触发，
+	只会一次推入到队列中。这种在缓冲时去除重复数据对于避免不必要的计算和 DOM 操作上非常重要。然后，在下一个的事件循环“tick”中，Vue 刷新队列并执行实际（已去重的）
+	工作。Vue 在内部尝试对异步队列使用原生的 Promise.then 和 MutationObserver，如果执行环境不支持，会采用 setTimeout(fn, 0) 代替。
+	例如，当你设置 vm.someData = 'new value' ，该组件不会立即重新渲染。当刷新队列时，组件会在事件循环队列清空时的下一个“tick”更新。多数情况我们不需要关心这个过程，
+	但是如果你想在 DOM 状态更新后做点什么，这就可能会有些棘手。虽然 Vue.js 通常鼓励开发人员沿着“数据驱动”的方式思考，避免直接接触 DOM，但是有时我们确实要这么做。
+	为了在数据变化之后等待 Vue 完成更新 DOM ，可以在数据变化之后立即使用 Vue.nextTick(callback) 。这样回调函数在 DOM 更新完成后就会调用。
 
+组件：组件（Component）是 Vue.js 最强大的功能之一。组件可以扩展 HTML 元素，封装可重用的代码。在较高层面上，组件是自定义元素， 
+	Vue.js 的编译器为它添加特殊功能。在有些情况下，组件也可以是原生 HTML 元素的形式，以 is 特性扩展。
+	全局注册组件：
+		// 注册
+		Vue.component('my-component', {
+		  template: '<div>A custom component!</div>'
+		})
+	局部注册组件：
+		var Child = {
+		  template: '<div>A custom component!</div>'
+		}
+		new Vue({
+		  // ...
+		  components: {
+			// <my-component> 将只在父模板可用
+			'my-component': Child
+		  }
+		})
+		
+	data 必须是函数：
+		使用组件时，大多数选项可以被传入到 Vue 构造器中，有一个例外： data 必须是函数。
 
+Render函数：Vue 推荐使用在绝大多数情况下使用 template 来创建你的 HTML。然而在一些场景中，你真的需要 JavaScript 的完全编程的能力，
+	这就是 render 函数，它比 template 更接近编译器。
 
 
 
